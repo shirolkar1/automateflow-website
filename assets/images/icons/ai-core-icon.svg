@@ -1,0 +1,6 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="40" cy="40" r="35" fill="#ff6b35" stroke="#e55a2e" stroke-width="2"/>
+  <circle cx="40" cy="40" r="20" fill="white"/>
+  <path d="M30 40 L50 40 M40 30 L40 50" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+  <text x="40" y="70" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#333">AI Core</text>
+</svg>
