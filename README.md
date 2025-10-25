@@ -8,7 +8,7 @@ A modern, responsive website for an AI automation company, built with pure HTML,
 - **Modern UI/UX** - Clean, professional design with smooth animations
 - **Interactive Elements** - FAQ accordion, pricing toggle, mobile navigation
 - **Smooth Scrolling** - Seamless navigation between sections
-- **Contact Form** - Ready-to-integrate contact functionality
+- **Contact Form** - Live submissions via Formspree (customizable endpoint)
 - **GitHub Pages Ready** - Easy deployment to GitHub Pages
 
 ## 📋 Sections
@@ -89,6 +89,17 @@ Edit `script.js` to:
 - Add form submission logic
 - Integrate analytics
 - Add more interactive features
+
+## ✉️ Form Submissions
+
+The contact form at the bottom of `index.html` is already wired to Formspree (`https://formspree.io/f/xjkpblpj`). To point it to your own Formspree form:
+
+1. Create a form in your Formspree dashboard and copy its endpoint URL.
+2. Update the `data-formspree` attribute on the `<form>` element in `index.html` with your endpoint.
+3. (Optional) Adjust the fallback endpoint in `script.js` if you want to keep the value outside of the markup.
+4. Deploy the site and submit a quick test entry to confirm it appears in Formspree.
+
+If the endpoint is missing or returns an error, the script will show a friendly alert so users know to try again.
 
 ## 🎨 Color Scheme
 

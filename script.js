@@ -90,21 +90,48 @@ if (pricingToggle) {
 const contactForm = document.querySelector('.contact-form');
 
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    const formspreeEndpoint = contactForm.dataset.formspree || 'https://formspree.io/f/xjkpblpj';
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            message: document.getElementById('message').value
-        };
+        if (!formspreeEndpoint) {
+            alert('Form endpoint is not configured. Please try again later.');
+            return;
+        }
         
-        // Here you would typically send the data to a server
-        // For now, we'll just show a success message
-        alert('Thank you for your message! We will get back to you soon.');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+        }
         
-        // Reset form
-        contactForm.reset();
+        try {
+            const response = await fetch(formspreeEndpoint, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: new FormData(contactForm)
+            });
+            
+            if (response.ok) {
+                alert('Thank you for your message! We will get back to you soon.');
+                contactForm.reset();
+            } else {
+                const data = await response.json().catch(() => null);
+                const errorMessage = data && data.errors
+                    ? data.errors.map(err => err.message).join(', ')
+                    : 'Something went wrong. Please try again.';
+                alert(errorMessage);
+            }
+        } catch (error) {
+            console.error('Form submission failed:', error);
+            alert('Network error. Please try again in a moment.');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Message';
+            }
+        }
     });
 }
 
