@@ -87,10 +87,39 @@ a {
 }
 
 .logo {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.04rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
+}
+
+.logo-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.logo-v {
+  font-family: "Great Vibes", cursive;
+  font-size: 1.7rem;
+  font-weight: 400;
+}
+
+.logo-q {
+  margin-left: 0.05rem;
+  margin-top: 0.1rem;
+  font-size: 0.58rem;
+  color: var(--brand-2);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.logo-text {
+  font-family: "Space Grotesk", sans-serif;
+  text-transform: lowercase;
 }
 
 .desktop-nav {
