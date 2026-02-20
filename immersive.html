@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Workflow Automation | Immersive Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#06080f',
+            dusk: '#0d1731',
+            neon: '#7be7ff',
+            coral: '#ff7f72'
+          },
+          boxShadow: {
+            neon: '0 0 45px rgba(123,231,255,0.35)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      background: radial-gradient(circle at 20% 15%, #1a2450, #080b15 45%, #04060b 100%);
+      color: #f5f7ff;
+      overflow-x: hidden;
+    }
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+    .glass {
+      background: linear-gradient(160deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+    }
+    .headline {
+      text-shadow: 0 0 24px rgba(123,231,255,0.35);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <script type="text/babel">
+    const { useEffect } = React;
+
+    function initParticles() {
+      const canvas = document.getElementById('bg-canvas');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.z = 12;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const count = 5000;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        const radius = 3 + Math.random() * 6;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+        positions[i3 + 2] = radius * Math.cos(phi);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const uniforms = {
+        uTime: { value: 0 },
+        uMouse: { value: new THREE.Vector2(0, 0) },
+      };
+
+      const material = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms,
+        vertexShader: `
+          uniform float uTime;
+          uniform vec2 uMouse;
+          varying float vAlpha;
+          void main() {
+            vec3 p = position;
+            float wave = sin(uTime * 0.45 + p.x * 0.8 + p.y * 0.7) * 0.25;
+            p.z += wave;
+            p.xy += uMouse * 0.7;
+            vec4 mv = modelViewMatrix * vec4(p, 1.0);
+            gl_PointSize = 2.2 + (12.0 / -mv.z);
+            gl_Position = projectionMatrix * mv;
+            vAlpha = 0.55 + wave;
+          }
+        `,
+        fragmentShader: `
+          varying float vAlpha;
+          void main() {
+            vec2 uv = gl_PointCoord - 0.5;
+            float d = length(uv);
+            float glow = smoothstep(0.5, 0.0, d);
+            vec3 c = mix(vec3(1.0, 0.5, 0.45), vec3(0.48, 0.9, 1.0), glow);
+            gl_FragColor = vec4(c, glow * vAlpha);
+          }
+        `
+      });
+
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      const onMouseMove = (e) => {
+        uniforms.uMouse.value.x = ((e.clientX / window.innerWidth) - 0.5) * 0.35;
+        uniforms.uMouse.value.y = ((e.clientY / window.innerHeight) - 0.5) * -0.35;
+      };
+
+      const onResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('resize', onResize);
+
+      const clock = new THREE.Clock();
+      let raf = 0;
+      const tick = () => {
+        uniforms.uTime.value = clock.getElapsedTime();
+        points.rotation.y += 0.0009;
+        points.rotation.x += 0.0004;
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(tick);
+      };
+      tick();
+
+      return () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('resize', onResize);
+        geometry.dispose();
+        material.dispose();
+        renderer.dispose();
+      };
+    }
+
+    function App() {
+      useEffect(() => {
+        const cleanup = initParticles();
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.from('.hero-reveal', {
+          y: 32,
+          opacity: 0,
+          duration: 1.1,
+          stagger: 0.14,
+          ease: 'power3.out'
+        });
+
+        gsap.utils.toArray('.panel').forEach((panel) => {
+          gsap.from(panel, {
+            y: 60,
+            opacity: 0,
+            duration: 1,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: panel, start: 'top 80%' }
+          });
+        });
+
+        return cleanup;
+      }, []);
+
+      return (
+        <main className="relative z-10 min-h-screen">
+          <header className="sticky top-0 z-20 border-b border-white/10 bg-black/20 backdrop-blur-xl">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+              <a className="text-2xl font-bold tracking-wide text-white" href="/">AI Workflow Automation</a>
+              <a href="#contact" className="rounded-full border border-white/40 bg-white/10 px-6 py-2 text-lg font-bold text-white transition hover:bg-white/20">Book Demo</a>
+            </div>
+          </header>
+
+          <section className="mx-auto grid max-w-7xl gap-10 px-6 pb-20 pt-24 lg:grid-cols-2 lg:pt-28">
+            <div>
+              <p className="hero-reveal mb-4 inline-block rounded-full border border-neon/40 bg-neon/10 px-4 py-1 text-sm tracking-[0.2em] text-neon">IMMERSIVE UI PROTOTYPE</p>
+              <h1 className="hero-reveal headline text-5xl font-bold leading-tight md:text-7xl">Cinematic Automation Interfaces Built For Decision Velocity</h1>
+              <p className="hero-reveal mt-6 max-w-xl text-xl text-slate-200">A high-end visual concept inspired by Lusion-style fluidity with realtime particles, shader glow, and intent-driven motion layers.</p>
+              <div className="hero-reveal mt-9 flex flex-wrap gap-4">
+                <a href="#capabilities" className="rounded-full bg-gradient-to-r from-coral to-pink-500 px-8 py-4 text-lg font-bold text-white shadow-neon">Explore Experience</a>
+                <a href="/" className="rounded-full border border-white/35 bg-white/5 px-8 py-4 text-lg font-bold text-white">Back to Main Site</a>
+              </div>
+            </div>
+            <div className="panel glass rounded-[2rem] p-8">
+              <p className="text-sm uppercase tracking-[0.2em] text-neon">Realtime Layer</p>
+              <h2 className="mt-2 text-3xl font-bold">3D signal field + workflow intelligence</h2>
+              <div className="mt-8 grid gap-4">
+                {['Predictive queue orchestration', 'Autonomous exception routing', 'Context-aware AI agent handoffs'].map((item) => (
+                  <div key={item} className="rounded-2xl border border-white/15 bg-white/5 p-4 text-lg">{item}</div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section id="capabilities" className="mx-auto max-w-7xl px-6 pb-24">
+            <div className="grid gap-6 md:grid-cols-3">
+              {[
+                ['WebGL + Three.js', 'Particle systems rendered in custom shaders for rich depth and fluid response.'],
+                ['GSAP choreography', 'Scroll-linked cinematic transitions to guide attention and story flow.'],
+                ['Tailwind + React structure', 'Componentized sections to iterate quickly on premium interaction design.']
+              ].map(([title, copy]) => (
+                <article key={title} className="panel glass rounded-3xl p-7">
+                  <h3 className="text-2xl font-bold text-white">{title}</h3>
+                  <p className="mt-3 text-lg text-slate-200">{copy}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section id="contact" className="mx-auto max-w-5xl px-6 pb-24">
+            <div className="panel glass rounded-[2rem] p-10 text-center">
+              <h2 className="text-4xl font-bold">If this direction feels right, we can convert your full site to this style.</h2>
+              <p className="mt-4 text-xl text-slate-200">Next step: production-ready React app with optimized shaders and staged asset loading.</p>
+              <a href="mailto:info@businessprocessautomation.onmicrosoft.com" className="mt-7 inline-block rounded-full bg-gradient-to-r from-neon to-cyan-400 px-8 py-4 text-xl font-bold text-black">Email Your Feedback</a>
+            </div>
+          </section>
+        </main>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
