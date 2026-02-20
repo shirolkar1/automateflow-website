@@ -268,5 +268,5 @@ const debouncedScrollHandler = debounce(() => {
 window.addEventListener('scroll', debouncedScrollHandler);
 
 // ===== CONSOLE MESSAGE =====
-console.log('%c🚀 AutomateFlow AI Website', 'color: #6366f1; font-size: 20px; font-weight: bold;');
+console.log('%c🚀 AI Workflow Automation Website', 'color: #6366f1; font-size: 20px; font-weight: bold;');
 console.log('%cBuilt with modern web technologies', 'color: #8b5cf6; font-size: 14px;');

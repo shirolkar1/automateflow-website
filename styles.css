@@ -80,7 +80,20 @@ body {
     padding: 1rem 20px;
 }
 
-.nav-brand h2 {
+.brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+}
+
+.brand-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+}
+
+.brand-link span {
     font-size: 1.5rem;
     font-weight: 700;
     background: var(--gradient-primary);
@@ -1511,6 +1524,12 @@ input:checked + .slider:before {
 .footer-col h3 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
+}
+
+.footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
 }
 
 .footer-col h4 {
